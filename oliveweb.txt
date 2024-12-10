@@ -1,0 +1,38 @@
+since decompiling doesnt work... (the exe uses some "confuser" which did infact confuse me even when i decompiled it)
+...i had to use a proxy to monitor requests to the api
+after finding an app that fits my needs in an user-friendly manner i recorded a casual oliveweb messenger session with fiddler
+
+first thing i found was that the server host is 68.108.66.195:5000 which was unsurprising (i remember the creator sending me the page to login which was on an ip smth like this)
+second thing was that most endpoints used post (except for static data like pfps) and used the classic content-type of "application/x-www-form-urlencoded"
+
+when you want to login and set ur status to online you send requests to these urls with post data in query param format that have fields "username" and "password"
+	- http://68.108.66.195:5000/connect/messenger/login.php (use filename instead of username, and data instead of password (requires a ver field too)
+	  on success, responds with "Success" in html
+	- http://68.108.66.195:5000/connect/messenger/update_solidstatus.php
+	  include a "status=Online" field
+
+to confirm if u or someone else is online post to http://68.108.66.195:5000/connect/messenger/get_solidstatus.php with an "username" field that says ur username u want to check.
+if online, responds with "Online"
+
+after login, you naturally would want to check ur convos.
+this part is the most confusing, but u can try recording http traffic to understand.
+im only including stuff i understand anyway, not stuff im baffled abt
+
+post to http://68.108.66.195:5000/connect/messenger/get_messages.php to get conversation ids, which i assume are separated by newline.
+you can then use one of these ids to post to http://68.108.66.195:5000/connect/messenger/get_msg.php with field "chatid" set to ur conversation id
+
+this responds with "Loading..." if chatid is blank, or the full chatlog of chat.
+
+normal user-to-user convos and multiuser groups are both considered a chat by the server. to check if a chat is a group, post to http://68.108.66.195:5000/connect/messenger/check_group.php with same "chatid" field, just like in the get_msg.php request.
+this responds with a "Yes" or "No"
+
+get the theme of a chat by posting http://68.108.66.195:5000/connect/messenger/get_theme.php with the "chatid".
+this returns "Theme" followed by a space and the theme id.
+
+to get a pfp, post to http://68.108.66.195:5000/connect/messenger/get_pfp.php
+this returns the url to the pfp which you can then simply request with get.
+
+still unsure how to send msgs, havent tested yet.
+
+now i know how! send a post request to http://68.108.66.195:5000/connect/messenger/update_msg.php with chatid being chatid, "username" and "message" being message content to send.
+its that simple.

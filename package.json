@@ -1,0 +1,9 @@
+{
+  "name": "koolkool",
+  "main": "koolkool.js",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "prompt-sync": "^4.2.0",
+    "request": "^2.88.2"
+  }
+}
