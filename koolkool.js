@@ -1,8 +1,18 @@
+/* koolkool
+ * An OliveWeb Messenger bot made by RixTheTyrunt. (@RixTheTyrunt on OM)
+ * 
+ * "imagine if this im uses http (it feels kinda rookie-level)"
+ * - me b4 figuring it out
+ * 
+ * Made with Node.js and ♥.
+ */
+
 request = require("util").promisify(require("request"))
 prompt = require("prompt-sync")()
 usern = "koolkool"
 pathToFull = (function(a) {return function(b,c){return{url:new URL(b,a).href,body:c?new URLSearchParams({...c}).toString():"",headers:{"content-type":"application/x-www-form-urlencoded"}}}})("http://68.108.66.195:5000/connect/messenger/")
 pref = "/kk/"
+cmds = {} // later filled in at line 38, dw
 
 async function shutdown() {
 	await Promise.allSettled([
@@ -27,10 +37,21 @@ async function shutdown() {
 
 (function(...a){cmds=Object.fromEntries(a.filter(function(b){return b.name}).map(function(b){return[b.name.slice(2),b]}))})(
 	async function c_help({sender, msg, reply}) {
-		await reply(`Hello, ${sender}! `)
+		await reply(`Hello ${sender}, you're currently using koolkool! (or a fork idk lol)\n${usern}: Here are all the help commands:\n\n${Object.keys(cmds).filter(function(a){return a!=="help"}).map(function(a){return`- ${pref+a}`}).join("\n")}`)
 	},
-	async function c_experiment({reply}) {
-		await reply("wow\nnewlines\nwow")
+	/*
+		async function c_experiment({reply}) {
+			await reply("wow\nnewlines\nwow")
+		},
+	*/
+	async function c_newyears({reply}) {
+		var rn = new Date()
+		var newyr = new Date(Date.UTC(rn.getUTCFullYear() + 1, 0, 1)) // utc new years
+		var diffMs = newyr - rn
+		var diffDays = Math.floor(diffMs / 864e5)
+		var diffHrs = Math.floor((diffMs % 864e5) / 36e5)
+		console.log(diffDays, diffHrs, diffMs)
+		await reply(`${diffDays} days and ${diffHrs} hrs left until New Year's.`);
 	}
 )
 
@@ -97,8 +118,10 @@ void(async function([pass]) {
 				// var args = fullMsg.slice(c.length+1).split(" ")
 				var f, resp
 				Object.entries(cmds).forEach(function([a, b]) {
-					if (a==cm) f = b
+					if(f)return
+					if(a.toLowerCase()==cm.toLowerCase())f=b
 				})
+				console.log(f)
 				if (!f) resp = `Unknown command, use ${pref}help to get command help.`
 				if (resp) {
 					await request({
@@ -113,22 +136,32 @@ void(async function([pass]) {
 				}
 				var msgs = []
 				await (async function() {
-					await Promise.resolve(f({
-						sender,
-						msg: realMsg,
-						reply: async function(a) {
-							msgs.push(await request({
-								...pathToFull("update_msg.php", {
-									chatid,
-									username: usern,
-									message: a+""
-								}),
-								method: "POST"
-							}))
-						},
-						id: chatid
-					}))
-					return resp
+					try {
+						await Promise.resolve(f({
+							sender,
+							msg: realMsg,
+							reply: async function(a) {
+								msgs.push(await request({
+									...pathToFull("update_msg.php", {
+										chatid,
+										username: usern,
+										message: a+""
+									}),
+									method: "POST"
+								}))
+							},
+							id: chatid
+						}))
+					} catch (_) {
+						await request({
+							...pathToFull("update_msg.php", {
+								chatid,
+								username: usern,
+								message: _.stack
+							}),
+							method: "POST"
+						})
+					}
 				})()
 			}))
 		} catch (_) {console.error(_.stack)}
