@@ -26,8 +26,11 @@ async function shutdown() {
 }
 
 (function(...a){cmds=Object.fromEntries(a.filter(function(b){return b.name}).map(function(b){return[b.name.slice(2),b]}))})(
-	function c_help({sender, msg, reply}) {
-		reply(`Hello, ${sender}! For now, even command help is experimental.`)
+	async function c_help({sender, msg, reply}) {
+		await reply(`Hello, ${sender}! `)
+	},
+	async function c_experiment({reply}) {
+		await reply("wow\nnewlines\nwow")
 	}
 )
 
@@ -72,7 +75,7 @@ void(async function([pass]) {
 				}),
 				method: "POST"
 			})).body
-			var mArr = msgs.split("\n").slice(0, 1)
+			var mArr = msgs.split("\n").slice(0, -1)
 			await Promise.allSettled(mArr.map(async function(chatid) {
 				var logs = await request({
 					...pathToFull("get_msg.php", {chatid}),
@@ -97,21 +100,36 @@ void(async function([pass]) {
 					if (a==cm) f = b
 				})
 				if (!f) resp = `Unknown command, use ${pref}help to get command help.`
-				var msg = await request({
-					...pathToFull("update_msg.php", {
-						chatid,
-						username: usern,
-						message: resp || (await (async function() {
-							await Promise.resolve(f({
-								sender,
-								msg: realMsg,
-								reply: function(a){if(!(resp))resp=a}
+				if (resp) {
+					await request({
+						...pathToFull("update_msg.php", {
+							chatid,
+							username: usern,
+							message: resp
+						}),
+						method: "POST"
+					})
+					return
+				}
+				var msgs = []
+				await (async function() {
+					await Promise.resolve(f({
+						sender,
+						msg: realMsg,
+						reply: async function(a) {
+							msgs.push(await request({
+								...pathToFull("update_msg.php", {
+									chatid,
+									username: usern,
+									message: a+""
+								}),
+								method: "POST"
 							}))
-							return resp
-						})())
-					}),
-					method: "POST"
-				})
+						},
+						id: chatid
+					}))
+					return resp
+				})()
 			}))
 		} catch (_) {console.error(_.stack)}
 		setTimeout(loop)
