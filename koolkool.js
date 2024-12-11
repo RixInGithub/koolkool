@@ -50,7 +50,6 @@ async function shutdown() {
 		var diffMs = newyr - rn
 		var diffDays = Math.floor(diffMs / 864e5)
 		var diffHrs = Math.floor((diffMs % 864e5) / 36e5)
-		console.log(diffDays, diffHrs, diffMs)
 		await reply(`${diffDays} days and ${diffHrs} hrs left until New Year's.`);
 	}
 )
@@ -121,7 +120,6 @@ void(async function([pass]) {
 					if(f)return
 					if(a.toLowerCase()==cm.toLowerCase())f=b
 				})
-				console.log(f)
 				if (!f) resp = `Unknown command, use ${pref}help to get command help.`
 				if (resp) {
 					await request({
