@@ -36,3 +36,8 @@ still unsure how to send msgs, havent tested yet.
 
 now i know how! send a post request to http://68.108.66.195:5000/connect/messenger/update_msg.php with chatid being chatid, "username" and "message" being message content to send.
 its that simple.
+
+how to update/get bio abt user?
+
+to get bio, send to http://68.108.66.195:5000/connect/messenger/get_bio.php with form data having a "username" field that says the user's username
+to update, post in http://68.108.66.195:5000/connect/messenger/bio.php with fields "username", "password", and "bio"

@@ -85,7 +85,33 @@ void(async function([pass]) {
 		})
 	])
 	// var allMsgs = {}
+	var oBio = (await request({
+		...pathToFull("get_bio.php", {
+			username: usern
+		}),
+		method: "POST"
+	})).body
 	var msgs
+	async function bioLoop() {
+		try {
+			var newyearsRaw = await new Promise(function(a){cmds.newyears({reply:function(b){a(b)}})})
+			var [dys, hrs] = newyearsRaw.split(" left")[0].split("and").map(function(a) {
+				return parseInt(a.match(new RegExp("\\d+")))
+			})
+			var bio = `New years counter: ${dys} days, ${hrs} hours.`
+			if (oBio == bio) return setTimeout(bioLoop)
+			oBio = bio
+			await request({
+				...pathToFull("bio.php", {
+					username: usern,
+					password: pass,
+					bio
+				}),
+				method: "POST"
+			})
+		} catch (_) {console.error(_.stack)}
+		setTimeout(bioLoop)
+	}
 	async function loop() {
 		try {
 			msgs = (await request({
@@ -167,6 +193,7 @@ void(async function([pass]) {
 	}
 	console.log("Press any character to exit.")
 	loop()
+	bioLoop()
 	process.stdin.setRawMode(true)
 	process.stdin.resume()
 	await new Promise(function(a){process.stdin.on("data",a)})
